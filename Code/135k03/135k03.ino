@@ -22,7 +22,7 @@ char ver[ ] = "135k03";
 #define mybattpin 14 // Порт датчика АКБ А1
 #define txpin 17 //Порт датчика ТХ.
 #define tonepin 12 // Порт выхода тонального сигнала для настройки TX.
-#define tonefreq 1000 // Частота тонального сигнала для настройки TX.
+#define tonefreq 500 // Частота тонального сигнала для настройки TX.
 
 
 #include "Adafruit_SSD1306.h" // Use version 1.2.7!!!
