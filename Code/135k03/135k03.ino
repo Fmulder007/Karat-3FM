@@ -433,18 +433,32 @@ void mainscreen() { //Процедура рисования главного э�
   switch (menu) {
 
     case 0: //Если не в меню, то рисовать главный экран
-      if (vfo_freq > 9999999UL) display.setTextSize(2);
-      display.println(vfo_freq / 1000.0);
-      display.setTextSize(1);
+      //Вывод частоты на дисплей
+      if ((vfo_freq / 1000000) < 10) display.print(" ");
+      display.print(vfo_freq / 1000000);//Вывод МГц
+      display.setCursor(display.getCursorX() + 5, display.getCursorY()); //Переводим курсор чуть правее текущего положения
+      if ((vfo_freq % 1000000) / 1000 < 100) display.print("0");
+      if ((vfo_freq % 1000000) / 1000 < 10) display.print("0");
+      display.print((vfo_freq % 1000000) / 1000); //Выводим КГц
+      display.setTextSize(2); // Для сотен и десятков герц делаем шрифт поменьше
+      display.setCursor(display.getCursorX() + 5, 7); //Переводим курсор чуть ниже текущего положения
+      if ((vfo_freq % 1000) / 10 < 10) display.print("0"); //Если герц <10 то выводим "0" перед ними.
+      display.println((vfo_freq % 1000) / 10);
+
+      //Выводим вторую строку на дисплей
+      display.setTextSize(1);// Ставим маленький шрифт
       if (mybatt - 100 < 0) display.print("0");
-      display.print(mybatt / 10.0);
+      display.print(mybatt / 10);
+      display.print(".");
+      display.print(mybatt % 10);
       display.print("v");
-      if (txen) {
+
+      if (txen) {//Если передача, то вывод показометра мощности
         display.print("PWR ");
         display.fillRect(64, 23, mypower, 9, WHITE);
       }
-      else {
-        //char ddot;
+      else {// Если прием, то рисовать температуру часы, полосу и диапазон
+        //char ddot
         if (temperature >= 0) display.print(" ");
         display.print(temperature);
         display.print((char)247);
