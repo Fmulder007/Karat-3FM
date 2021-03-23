@@ -459,10 +459,15 @@ void mainscreen() { //Процедура рисования главного э�
       }
       else {// Если прием, то рисовать температуру часы, полосу и диапазон
         //char ddot
-        if (temperature >= 0) display.print(" ");
+        if (temperature >= -50 && temperature <= 50){
+          if (temperature >= 0) display.print(" ");
         display.print(temperature);
         display.print((char)247);
         display.print("C");
+        }
+        else{
+          display.print(" err ");
+        }
         if (actencf) {
           display.print(" ");
         }
