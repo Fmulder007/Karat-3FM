@@ -643,7 +643,7 @@ void vfosetup() {
 }
 
 void si5351init() {
-  si.setup(3, 0, 3);
+  si.setup(0, 0, 0);
   si.cload(si_cload);
 }
 
