@@ -498,7 +498,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("  Step Hz");
       break;
 
-    case 3: //Меню 4 - LSB|USB
+    case 3: //Меню 3 - LSB|USB
       if (mode) {
         display.println("USB");
       }
@@ -511,7 +511,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.println("  LSB|USB Switch");
       break;
 
-    case 4: //Меню 5 - Настройка min_freq
+    case 4: //Меню 4 - Настройка min_freq
       display.println(min_freq * 100);
       display.setTextSize(1);
       display.print(menu);
@@ -520,7 +520,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("kHz");
       break;
 
-    case 5: //Меню 6 - Настройка maxfreq
+    case 5: //Меню 5 - Настройка maxfreq
       display.println(max_freq * 100);
       display.setTextSize(1);
       display.print(menu);
@@ -529,7 +529,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("kHz");
       break;
 
-    case 6: //Меню 7 - Настройка BFO гетеродина LSB
+    case 6: //Меню 6 - Настройка BFO гетеродина LSB
       display.setTextSize(2);
       display.println(lsb_bfo_freq);
       display.setTextSize(1);
@@ -539,7 +539,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("Hz");
       break;
 
-    case 7: //Меню 8 - Настройка BFO гетеродина USB
+    case 7: //Меню 7 - Настройка BFO гетеродина USB
       display.setTextSize(2);
       display.println(usb_bfo_freq);
       display.setTextSize(1);
@@ -549,7 +549,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("Hz");
       break;
 
-    case 8: //Меню 9 - Настройка опорного гетеродина 500кГц
+    case 8: //Меню 8 - Настройка опорного гетеродина 500кГц
       display.println(lo_cal_freq);
       display.setTextSize(1);
       display.print(menu);
@@ -558,7 +558,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("Hz");
       break;
 
-    case 9: //Меню 10 - Настройка калибровки кварца
+    case 9: //Меню 9 - Настройка калибровки кварца
       display.println(Si_Xtall_calFreq);
       display.setTextSize(1);
       display.print(menu);
@@ -567,21 +567,21 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("Hz");
       break;
 
-    case 10: //Меню 11 - Настройка калибровки по питанию
+    case 10: //Меню 10 - Настройка калибровки по питанию
       display.println(batt_cal);
       display.setTextSize(1);
       display.print(menu);
       display.print("  Batt Cal");
       break;
 
-    case 11: //Меню 12 - Количество диапазонов
+    case 11: //Меню 11 - Количество диапазонов
       display.println(number_of_bands);
       display.setTextSize(1);
       display.print(menu);
       display.print("  MAX Num Bands");
       break;
 
-    case 12: //Меню 13 - Настройка Часов
+    case 12: //Меню 12 - Настройка Часов
       if (tm.Hour < 10) display.print("0");
       display.println(tm.Hour);
       display.setTextSize(1);
@@ -589,7 +589,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("  Hour");
       break;
 
-    case 13: //Меню 14 - Настройка Минут
+    case 13: //Меню 13 - Настройка Минут
       if (tm.Minute < 10) display.print("0");
       display.println(tm.Minute);
       display.setTextSize(1);
@@ -597,7 +597,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("  Minute");
       break;
 
-    case 14: //Меню 15 - Reverse Encoder
+    case 14: //Меню 14 - Reverse Encoder
       if (reverse_encoder) {
         display.println("Yes");
       }
