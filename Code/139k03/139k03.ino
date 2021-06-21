@@ -448,7 +448,7 @@ void mainscreen() { //Процедура рисования главного э�
           display.print(" ");
         }
         else {
-          display.print(".");
+          display.print("*");
         }
         if (tm.Hour < 10) display.print(" ");
         display.print(tm.Hour);
