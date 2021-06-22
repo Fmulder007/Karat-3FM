@@ -714,7 +714,7 @@ void versionprint() {
 }
 
 void tonegen() {
-  if (txen && menu == 1 && !toneen) {
+  if (txen && menu && !toneen) {
     tone(tonepin, tonefreq);
     menu = 0;
     toneen = true;
