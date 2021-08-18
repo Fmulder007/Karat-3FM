@@ -25,7 +25,7 @@ char ver[ ] = "141k03";
 #define mypowerpin 16 // Порт показометра мощности. А0
 #define mybattpin 14 // Порт датчика АКБ А1
 #define txpin 17 //Порт датчика ТХ.
-//#define tonepin 11 // Порт выхода тонального сигнала для настройки TX. Не менять!
+#define tonepin 12 // Порт выхода тонального сигнала для настройки TX.
 #define tonefreq 500 // Частота тонального сигнала для настройки TX.
 
 
@@ -119,7 +119,7 @@ void setup() {
   Serial.begin(57600);
   pinMode(myEncBtn, INPUT);
   pinMode(mypowerpin, INPUT);
-  toneinit();
+  pinMode(tonepin, OUTPUT);
   digitalWrite(myEncBtn, HIGH);
   analogReference(INTERNAL);
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADRESS);
@@ -448,7 +448,7 @@ void mainscreen() { //Процедура рисования главного э�
           display.print(" ");
         }
         else {
-          display.print("*");
+          display.print(".");
         }
         if (tm.Hour < 10) display.print(" ");
         display.print(tm.Hour);
@@ -712,27 +712,17 @@ void versionprint() {
   display.display();
   delay(1000);
 }
-void toneinit() {
-  noInterrupts();           // Disable all interrupts
-  //Timer1 500Hz out
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCCR2A |= (1 << COM2A0); //Пин 11 на реверс при сравнении
-  TCCR2A |= (1 << WGM21);   // CTC режим таймера2
-  TCCR2B |= (1 << CS22) | (1 << CS21);  // предделитель тактовой
-  OCR2A = 61;            // До скольки считать
-  interrupts();
-}
+
 void tonegen() {
   if (txen && !toneen) {
     if (menu != 0 && menu <= 3) {
-      DDRB |= (1 << DDB3); //Pin11 500Hz output enable
+      tone(tonepin, tonefreq);
       menu = 0;
       toneen = true;
     }
   }
   if (!txen && toneen) {
-    DDRB &= ~(1 << DDB3); // Pin11  500Hz output disable
+    noTone(tonepin);
     toneen = false;
   }
 }
