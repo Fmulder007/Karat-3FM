@@ -673,7 +673,7 @@ void memread() {
     crcrom += AT24C32.readByte ((i + 2));
     i++;
   }
-  if (crc == (crcrom + 1)) {
+  if (crc == (crcrom + 2)) {
     AT24C32.readEE (2, general_setting);
   }
   else {
@@ -693,7 +693,7 @@ void band_memread() {
     crcrom += AT24C32.readByte ((i + sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2) * band)) + 2);
     i++;
   }
-  if (crc == (crcrom + 1)) {
+  if (crc == (crcrom + 2)) {
     AT24C32.readEE (sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2)*band) + 2, band_setting);
   }
   else {
@@ -726,3 +726,8 @@ void tonegen() {
     toneen = false;
   }
 }
+
+/*void freset() {
+  pinMode(11, INPUT);
+  digitalWrite(11, HIGH);
+}*/
