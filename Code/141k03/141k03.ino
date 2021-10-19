@@ -646,7 +646,7 @@ void memwrite () { //Запись general_setting
     i++;
   }
   AT24C32.writeEE(2, general_setting);
-  AT24C32.writeEE(0, (crc + 1));
+  AT24C32.writeEE(0, (crc + 2));
 
   // Запись band_setting
   crc = 0;
@@ -658,7 +658,7 @@ void memwrite () { //Запись general_setting
     i++;
   }
   AT24C32.writeEE(sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2)*band) + 2, band_setting);
-  AT24C32.writeEE(sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2)*band), (crc + 1));
+  AT24C32.writeEE(sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2)*band), (crc + 2));
 }
 
 void memread() {
