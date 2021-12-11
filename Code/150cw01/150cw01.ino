@@ -258,7 +258,7 @@ void pushknob () {  // Обработка нажатия на кноб
       else {
         menu ++; //Переходим на меню дальше
         if (menu == 4) menu = 0; //Если меню 5 выйти на главный экран
-        if (menu > 18) menu = 4; //Если меню больше 16 перейти на меню 5
+        if (menu > 18) menu = 4; //Если меню больше 18 перейти на меню 5
       }
       if (!number_of_bands && menu == 1) menu++;
     }
@@ -421,13 +421,13 @@ void readencoder() { // работа с енкодером
       case 17: // Настройка CW-Delay
         if (newPosition > oldPosition && cwdelay < 255) cwdelay++;
         if (newPosition < oldPosition && cwdelay > 1) cwdelay--;
-        cwdelay = constrain(cwdelay, 1, 255);
+        cwdelay = constrain(cwdelay, 10, 255);
         break;
 
       case 18: // Настройка CW-Tone
         if (newPosition > oldPosition && cwtone < 255) cwtone++;
         if (newPosition < oldPosition && cwtone > 1) cwtone--;
-        cwtone = constrain(cwtone, 1, 255);
+        cwtone = constrain(cwtone, 10, 255);
         break;
 
 
@@ -676,7 +676,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.println(cwtone * 10);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  CW Tone xHz");
+      display.print("  CW Tone Hz");
       break;
 
   }
@@ -690,14 +690,19 @@ void vfosetup() {
   if (cwtxen) {
     if (cwkeydown) {
       if (mode) {
-        si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), (usb_bfo_freq + lo_freq + lo_cal_freq + (cwtone * 10)), 0);
+        si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), (usb_bfo_freq + lo_freq + lo_cal_freq - (cwtone * 10)), 0);
       }
       else {
-        si.set_freq((vfo_freq + lsb_bfo_freq - (lo_freq + lo_cal_freq)), (lsb_bfo_freq - (lo_freq + lo_cal_freq + (cwtone * 10))), 0);
+        si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), (lsb_bfo_freq - lo_freq + lo_cal_freq + (cwtone * 10)), 0);
       }
     }
     else {
-      si.set_freq(0, 0, 0);
+      if (mode) {
+        si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), 0, 0);
+      }
+      else {
+        si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), 0, 0);
+      }
     }
 
   }
@@ -706,7 +711,7 @@ void vfosetup() {
       si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_freq));
     }
     else {
-      si.set_freq((vfo_freq + lsb_bfo_freq - (lo_freq + lo_cal_freq)), 0, (lsb_bfo_freq));
+      si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_freq));
     }
   }
 
@@ -825,13 +830,16 @@ void cw() { // Процедура работы с ключом
     cwkeycount = 0;    // Сбросить счетчики
   }
 
-  if (cwkeycount > 3)  {   // Если счетчик непрерывно нажатого ключа больше 10 то:
-    cwkeycount = 3;    // поддерживаем счетчик
+  if (cwkeycount > 10)  {   // Если счетчик непрерывно нажатого ключа больше 10 то:
+    cwkeycount = 10;    // поддерживаем счетчик
+    if (txen&&!cwtxen&&cwkeydown){
+      cwtxen = true;   // Если перевелся на TX но нет флага cw tx запоминаем Трансивер на передаче в CW
+      vfosetup();
+    }
     if (!cwkeydown) {                   // Если ключ НЕ БЫЛ НАЖАТ, то
       cwkeydown = true;                  // Запоминаем что ключ нажат
       if (!cwtxen) {                     // Если не на CW передаче, то
         digitalWrite(cwtxpin, HIGH);        //Пытаемся перевести трансивер на передачу
-        if (txen) cwtxen = true;             // Если трансивер перешёл на передачу, то Трансивер на передаче в CW
       }
       vfosetup();
     }
@@ -847,7 +855,7 @@ void cw() { // Процедура работы с ключом
 
     if (!cwkeydown) {                 // ключ НЕ БЫЛ нажат
       long keymillis = millis();          // проверяем текущее время
-      if (keymillis - keyupmillis >> (cwdelay * 10)) {   // Если прошло больше чем CW delay
+      if (keymillis - keyupmillis >= (cwdelay * 10)) {   // Если прошло больше чем CW delay
         digitalWrite(cwtxpin, LOW);                          //Пытаемся перевести трансивер на прием                                            // Если трансивер перешёл прием, то
         cwtxen = false;                                    // опускаем флаг передачи CW
         vfosetup();
