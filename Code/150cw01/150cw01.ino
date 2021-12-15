@@ -517,8 +517,8 @@ void mainscreen() { //Процедура рисования главного э�
         if (band < 10) display.print(" ");
         display.print(band);
       }
-      if (cwtxen) display.fillRect(0, 0, 3, 3, WHITE);
-      if (cwkeydown) display.fillRect(0, 10, 3, 3, WHITE);
+      //if (cwtxen) display.fillRect(0, 0, 3, 3, WHITE);
+      //if (cwkeydown) display.fillRect(0, 10, 3, 3, WHITE);
       break;
 
     case 1: //Меню 1 - диапазон
