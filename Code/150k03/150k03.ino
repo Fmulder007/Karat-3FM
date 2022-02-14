@@ -1,9 +1,17 @@
 char ver[ ] = "150k03";
+//*************************************************************//
+//  Karat-3 firmware for syntez board version 150х01
+//    All 3 out si5351 worked
+//    CLK0 - VFO + BFO (+ LO USB or - LO USB)
+//    CLK1 - BFO  (22.2LSB or 21.2USB)
+//    CLK2 - LO (500kHz)
+//**************************************************************//
+
 
 //#define SI_OVERCLOCK 750000000L
 #define ENCODER_OPTIMIZE_INTERRUPTS
 
-#define crcmod 9// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
+#define crcmod 1// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -13,7 +21,7 @@ char ver[ ] = "150k03";
 
 #define max_number_of_bands	99 // Максимальное оличество диапазонов.
 #define Si_Xtall_Freq 27000000UL // Частота кварца si5351, Гц.
-#define si_cload SI5351_CRYSTAL_LOAD_8PF// 
+#define si_cload_val SI5351_CRYSTAL_LOAD_10PF// 
 #define lo_max_freq 550000UL // Максимальная частота 500 КГц опоры, Гц.
 #define lo_min_freq 450000UL // Минимальная частота 500 КГц опоры, Гц.
 #define bfo_max_freq 30000000UL // Максимальная частота 21.7 МГц опоры, Гц.
@@ -658,14 +666,16 @@ void vfosetup() {
 }
 
 void si5351init() {
-  si.setup(0, 0, 0);
-  si.cload(si_cload);
+  si.setup();
+  si.cload(si_cload_val);
 }
 
 void si5351correction() {
   si.set_xtal_freq(Si_Xtall_Freq + Si_Xtall_calFreq);
+  //si5351init();
   si.update_freq(0);
-  si.update_freq(2);
+  si.update_freq(1);
+  //si.update_freq(2);
 }
 
 void memwrite () { //Запись general_setting
