@@ -21,18 +21,17 @@ char ver[ ] = "150x03";
 #define lo_freq 500000UL // Частота опоры 500 КГц.
 #define min_hardware_freq 10 // *100KHz Минимальный железный предел частоты диапазона VFO
 #define max_hardware_freq 199 // *100KHz Максимальный железный предел частоты диапазона VFO
-//#define ifstep 50 // Шаг IF-Shift, Гц
 #define ONE_WIRE_BUS 14 // Порт датчика температуры
 #define myEncBtn 4 // Порт нажатия кноба.
 #define fwdpin 15 // Порт fwd показометра мощности. А0
 #define revpin 16 // Порт fwd показометра мощности. А0
-#define mybattpin 21 // Порт датчика АКБ А1
-#define txsenspin 17 //Порт датчика ТХ.
-#define pttpin 7 // PTT
-#define dotpin 6 // CW TX dot
-#define dashpin 5 // CW TX dash
-#define txenpin 9 // TX en pin
-#define rxenpin 8 // RX en pin
+#define mybattpin 21 // Порт датчика АКБ
+#define txsenspin 17 //Порт датчика ТХ
+#define pttpin 6 // PTT
+#define dotpin 5 // CW TX dot
+#define dashpin 7 // CW TX dash
+#define txenpin 9 // TX en out pin
+#define rxenpin 8 // RX en out pin
 #define tonepin 12 // Порт выхода тонального сигнала для настройки TX.
 #define tonefreq 500 // Частота тонального сигнала для настройки TX.
 
@@ -63,7 +62,7 @@ struct general_set {
   uint8_t cwdelay = 50; // Задержка переключения на прием после CW передачи * 10мсек
   uint8_t cwtone = 70; // Сдвиг частоты CW *10 Гц
   bool cwreverse = false; // Реверс ключа
-  bool txrxcontrolpulse = true; // контроль RX|TX импульсно/постоянно
+  uint8_t pttdelay = 25; // Задержка PTT
 } general_setting;
 
 #define stp general_setting.stp_set
@@ -79,6 +78,8 @@ struct general_set {
 #define temp_cal general_setting.temp_cal
 #define cwdelay general_setting.cwdelay
 #define cwtone general_setting.cwtone
+#define cwreverse general_setting.cwreverse
+#define pttdelay general_setting.pttdelay
 
 // Диапазонные настройки
 struct band_set {
@@ -99,10 +100,10 @@ struct band_set {
 uint8_t menu = 0; //Начальное положение меню.
 uint16_t arraystp[] = {1, 10, 50, 100, 500, 1000, 10000}; //шаги настройки * 10 герц.
 
-uint8_t enc_div=4;
-uint8_t mypower=0;
-uint8_t mybatt=0;
-int8_t temperature=0;
+uint8_t enc_div = 4;
+uint8_t mypower = 0;
+uint8_t mybatt = 0;
+int8_t temperature = 0;
 int16_t screenstep = 1000;
 
 bool toneen = false;
@@ -123,7 +124,11 @@ uint32_t keyupmillis = 0;
 uint8_t cwkeycount = 0;
 uint8_t cwcount = 0;
 
-// uint32_t previousMillis = 0;
+// PTT flags
+bool ptten = 0;
+uint8_t pttcount = 0;
+uint32_t pttreleasetimer = 0;
+
 uint32_t previousdsp = 0;
 uint32_t previoustemp = 0;
 uint32_t previoustime = 0;
@@ -143,23 +148,24 @@ tmElements_t tm;
 
 void setup() {
   //PTT control setup
-  pinmode (pttpin, INPUT); // PTT pin input
-  pinmode (txenpin, OUTPUT); // TX control pin output 
-  pinmode (rxenpin, OUTPUT); // RX control pin output
-  
-  digitalWrite (pttpin, HIGH); // PTT pin pullup
-  digitalWrite (txenpin, LOW); // TX control pin pullup 
+  pinMode (pttpin, INPUT); // PTT pin input
+  pinMode (txenpin, OUTPUT); // TX control pin output
+  pinMode (rxenpin, OUTPUT); // RX control pin output
+
+  digitalWrite (pttpin, LOW); // PTT pin pullup
+  digitalWrite (txenpin, LOW); // TX control pin pullup
   digitalWrite (rxenpin, LOW); // RX control pin pullup
-	
+
   //CW pin`s setup
   pinMode (dotpin, INPUT);			//CW dotpin input
   pinMode (dashpin, INPUT);         //CW dashpin input
-  digitalWrite (dotpin, HIGH);      // CW dotpin pin pullup
-  digitalWrite (dashpin, HIGH);     // CW dashpin pin pullup
-  
+  digitalWrite (dotpin, LOW);      // CW dotpin pin pullup Disable
+  digitalWrite (dashpin, LOW);     // CW dashpin pin pullup Disable
+
   // other pin`s setup
   pinMode(myEncBtn, INPUT);
-  pinMode(mypowerpin, INPUT);
+  pinMode(fwdpin, INPUT);
+  pinMode(revpin, INPUT);
   pinMode(tonepin, OUTPUT);
   digitalWrite(myEncBtn, HIGH);
   analogReference(INTERNAL);
@@ -181,7 +187,8 @@ void setup() {
 }
 
 void loop() { // Главный цикл
-  cw();
+  pttsensor();
+  //cw();
   pushknob();
   readencoder();
   txsensor();
@@ -273,7 +280,7 @@ void pushknob () {  // Обработка нажатия на кноб
       else {
         menu ++; //Переходим на меню дальше
         if (menu == 4) menu = 0; //Если меню 5 выйти на главный экран
-        if (menu > 18) menu = 4; //Если меню больше 18 перейти на меню 5
+        if (menu > 19) menu = 4; //Если меню больше 18 перейти на меню 5
       }
       if (!number_of_bands && menu == 1) menu++;
     }
@@ -445,6 +452,12 @@ void readencoder() { // работа с енкодером
         cwtone = constrain(cwtone, 10, 255);
         break;
 
+      case 19: // Настройка PTT-Delay
+        if (newPosition > oldPosition && pttdelay < 255) pttdelay += 5;
+        if (newPosition < oldPosition && pttdelay > 5) pttdelay -= 5;
+        pttdelay = constrain(pttdelay, 5, 255);
+        break;
+
 
     }
     actenc = millis();
@@ -455,8 +468,10 @@ void readencoder() { // работа с енкодером
 }
 
 void powermeter () { // Измеритель уровня выхода
-  int16_t rawpower = analogRead(mypowerpin);
-  mypower = map(rawpower, 0, 1023, 0, 100);
+  //fwdpin
+  //revpin
+  int16_t fwdpower = analogRead(fwdpin);
+  mypower = map(fwdpower, 0, 1023, 0, 100);
 }
 
 void battmeter () { // Измеритель напряжения питания
@@ -491,9 +506,20 @@ void mainscreen() { //Процедура рисования главного э�
       display.print(".");
       display.print(mybatt % 10);
       display.print("v");
+      display.setTextSize(1);
+      /*if (ptten) display.print("PTT");
+        if (cwtxen) display.print("CWtxen");*/
 
       if (txen) {//Если передача, то вывод показометра мощности
-        display.print("PWR ");
+        if (ptten) {
+          display.print("SSB ");
+        }
+        else if (cwtxen) {
+          display.print(" CW ");
+        }
+        else {
+          display.print("PWR ");
+        }
         display.fillRect(64, 23, mypower, 9, WHITE);
       }
       else {// Если прием, то рисовать температуру часы, полосу и диапазон
@@ -694,6 +720,15 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("  CW Tone Hz");
       break;
 
+
+    case 19: //Меню 19 - PTT-Delay
+      display.println(pttdelay * 10);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print("  PTT Delay msec");
+      break;
+
+
   }
   display.display();
   //debug();
@@ -740,7 +775,7 @@ void si5351init() {
 void si5351correction() {
   si.set_xtal_freq(Si_Xtall_Freq + Si_Xtall_calFreq);
   si.update_freq(0);
-  si.update_freq(2);
+  si.update_freq(1);
 }
 
 void memwrite () { //Запись general_setting
@@ -778,7 +813,7 @@ void memread() {
   AT24C32.readEE (0, crc);
   while (i < (sizeof(general_setting)))
   {
-    crcrom += AT24C32.readuint8_t ((i + 2));
+    crcrom += AT24C32.readByte ((i + 2));
     i++;
   }
   if (crc == (crcrom + crcmod)) {
@@ -798,7 +833,7 @@ void band_memread() {
   AT24C32.readEE (sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2) * band), crc);
   while (i < (sizeof(band_setting)))
   {
-    crcrom += AT24C32.readuint8_t ((i + sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2) * band)) + 2);
+    crcrom += AT24C32.readByte ((i + sizeof(general_setting) + 2 + ((sizeof(band_setting) + 2) * band)) + 2);
     i++;
   }
   if (crc == (crcrom + crcmod)) {
@@ -836,9 +871,8 @@ void tonegen() {
 }
 
 void cw() { // Процедура работы с ключом
-  bool keydown = digitalRead (cwkeypin); //Считываем состояние ключа
 
-  if (!keydown) {     //Если есть контакт, то:
+  if (!digitalRead (dotpin)) {     //Если DOTpin, то:
     cwkeycount++;     // счетчик ключа +1
   }
   else {              // Если нет контакта
@@ -847,14 +881,14 @@ void cw() { // Процедура работы с ключом
 
   if (cwkeycount > 10)  {   // Если счетчик непрерывно нажатого ключа больше 10 то:
     cwkeycount = 10;    // поддерживаем счетчик
-    if (txen&&!cwtxen&&cwkeydown){
+    if (txen && !cwtxen && cwkeydown) {
       cwtxen = true;   // Если перевелся на TX но нет флага cw tx запоминаем Трансивер на передаче в CW
       vfosetup();
     }
     if (!cwkeydown) {                   // Если ключ НЕ БЫЛ НАЖАТ, то
       cwkeydown = true;                  // Запоминаем что ключ нажат
       if (!cwtxen) {                     // Если не на CW передаче, то
-        digitalWrite(cwtxpin, HIGH);        //Пытаемся перевести трансивер на передачу
+        // digitalWrite(cwtxpin, HIGH);        //Пытаемся перевести трансивер на передачу
       }
       vfosetup();
     }
@@ -871,10 +905,41 @@ void cw() { // Процедура работы с ключом
     if (!cwkeydown) {                 // ключ НЕ БЫЛ нажат
       long keymillis = millis();          // проверяем текущее время
       if (keymillis - keyupmillis >= (cwdelay * 10)) {   // Если прошло больше чем CW delay
-        digitalWrite(cwtxpin, LOW);                          //Пытаемся перевести трансивер на прием                                            // Если трансивер перешёл прием, то
+        //        digitalWrite(cwtxpin, LOW);                          //Пытаемся перевести трансивер на прием                                            // Если трансивер перешёл прием, то
         cwtxen = false;                                    // опускаем флаг передачи CW
         vfosetup();
       }
     }
+  }
+}
+
+void pttsensor() {
+  if (!digitalRead (pttpin)) {     //Если PTT на земле, то:
+    pttcount++;     // увеличить счетчик PTT на 1
+  }
+  else {              // Если нет контакта
+    pttcount = 0;    // Сбросить счетчик
+    if (ptten) {  //  Если флаг ptten поднят, то:
+      ptten = false;   //  опускаем флаг ptten
+      pttreleasetimer = millis(); // запоминаем момент отпускания PTT.
+    }
+
+  }
+
+  if (pttcount > 10)  {   // Если счетчик непрерывно нажатого PTT больше 10 то:
+    if (!ptten) ptten = true;   //  Если флаг ptten не поднят поднимаем флаг ptten
+    pttcount = 10;    // 1 - поддерживаем счетчик pttcount на 10
+  }
+  rxtxcontrol();
+}
+
+void rxtxcontrol() {
+  if (!txen && ptten) { // Если на приеме и нажали PTT то перевести на передачу!
+    digitalWrite (rxenpin, LOW);
+    digitalWrite (txenpin, HIGH);
+  }
+  if (txen && !ptten && (millis() - pttreleasetimer >= (pttdelay * 10))) { //Если на передаче и отпустили PTT больше чем 500мс назад, то перевести на прием!
+    digitalWrite (txenpin, LOW);
+    digitalWrite (rxenpin, HIGH);
   }
 }
