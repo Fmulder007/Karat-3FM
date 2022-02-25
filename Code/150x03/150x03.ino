@@ -727,8 +727,6 @@ void mainscreen() { //Процедура рисования главного э�
       display.print(menu);
       display.print("  PTT Delay msec");
       break;
-
-
   }
   display.display();
   //debug();
@@ -775,7 +773,7 @@ void si5351init() {
 void si5351correction() {
   si.set_xtal_freq(Si_Xtall_Freq + Si_Xtall_calFreq);
   si.update_freq(0);
-  si.update_freq(1);
+  si.update_freq(2);
 }
 
 void memwrite () { //Запись general_setting
