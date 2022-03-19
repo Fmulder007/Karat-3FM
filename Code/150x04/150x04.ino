@@ -34,6 +34,7 @@ char ver[ ] = "150x04";
 #define rxenpin 8 // RX en out pin
 #define tonepin 12 // Порт выхода тонального сигнала для настройки TX.
 #define tonefreq 500 // Частота тонального сигнала для настройки TX.
+#define cwsemitonepin 11 // Пин выхода самоконтроля.
 
 
 
@@ -127,9 +128,10 @@ bool actfmenuf = false;
 // CW flags
 bool cwtxen = false;
 bool cwkeydown = false;
+bool cwsemitoneen = false;
 uint32_t cwkeyreleasetimer = 0;
 uint8_t cwkeycount = 0;
-//uint8_t cwcount = 0;
+
 
 // PTT flags
 bool ptten = 0;
@@ -169,6 +171,9 @@ void setup() {
   pinMode (dashpin, INPUT);         //CW dashpin input
   digitalWrite (dotpin, LOW);      // CW dotpin pin pullup Disable
   digitalWrite (dashpin, LOW);     // CW dashpin pin pullup Disable
+  pinMode (cwsemitonepin, OUTPUT); // CW semicontrol tonepin mode
+  digitalWrite(cwsemitonepin, 0);  // CW semicontrol tonepin GND
+
 
   // other pin`s setup
   pinMode(myEncBtn, INPUT);
@@ -516,8 +521,8 @@ void mainscreen() { //Процедура рисования главного э�
       display.print(mybatt % 10);
       display.print("v");
       display.setTextSize(1);
-      /*if (ptten) display.print("PTT");
-        if (cwtxen) display.print("CWtxen");*/
+      //if (ptten) display.print("PTT");
+      //if (cwtxen) display.print("CWtxen");
 
       if (txen) {//Если передача, то вывод показометра мощности
         /*if (ptten) {
@@ -882,6 +887,19 @@ void tonegen() {
   }
 }
 
+void cwsemitonegen() {
+  if (cwtxen && cwkeydown && !cwsemitoneen) {
+    if (!menu) {
+      tone(cwsemitonepin, cwtone * 10);
+      cwsemitoneen = true;
+    }
+  }
+  if (!cwkeydown && cwsemitoneen) {
+    noTone(cwsemitonepin);
+    cwsemitoneen = false;
+  }
+}
+
 void cw() { // Процедура работы с ключом
   if (!ptten) {
     if (!digitalRead (dotpin)) {     //Если DOTpin=0, то:
@@ -894,11 +912,13 @@ void cw() { // Процедура работы с ключом
           cwkeyreleasetimer = millis();                       // Запоминаем время последнего отпускания ключа
           cwkeydown = false;                                  // Запоминаем что ключ был отпущен
           vfosetup();
+          cwsemitonegen();
         }
         if (!cwkeydown && ((millis() - cwkeyreleasetimer) >= (cwdelay * 10))) {
           cwtxen = false;
           rxtxcontrol(cwtxen);
           vfosetup();
+          cwsemitonegen();
         }
       }
     }
@@ -909,16 +929,19 @@ void cw() { // Процедура работы с ключом
       if (!cwkeydown) {                   // Если ключ НЕ БЫЛ НАЖАТ, то
         cwkeydown = true;                  // Запоминаем что ключ нажат
         vfosetup();
+        cwsemitonegen();
       }
 
       if (!cwtxen && cwkeydown) {         // Если НЕ на передаче, но ключ нажат:
         cwtxen = true;                    // Переводим трансивер на передачу в CW
         rxtxcontrol(cwtxen);
         vfosetup();
+        cwsemitonegen();
       }
     }
   }
 }
+
 void pttsensor() {
   if (!cwtxen) {              // Если не на передаче в CW
     if (!digitalRead (pttpin)) {      // Если PTT на земле, то:
