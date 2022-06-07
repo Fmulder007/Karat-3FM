@@ -1,4 +1,4 @@
-char ver[ ] = "150x04";
+char ver[ ] = "150x05";
 
 //#define SI_OVERCLOCK 750000000L
 #define ENCODER_OPTIMIZE_INTERRUPTS
