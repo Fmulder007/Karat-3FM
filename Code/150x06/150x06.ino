@@ -1,12 +1,17 @@
 char ver[ ] = "150x06";
 /*
-  Включение с нажатым кнобом переводит в режим инжменю.
+   Для плат версии 150х03 150х04. На других платах надо править конфиг пинов тональника и пр.
+   ВНИМАНИЕ!!! Применять ядро от AlexGyver: https://github.com/AlexGyver/GyverCore
+   Добавлен Канальный режим. В нем недоступны "лишние" настройки
+   Настройки второй ПЧ разбиты на 4 для применения разных фильтров RX/TX
+   Включение с нажатым кнобом переводит в режим инжменю.
+   Добавлен цифровой фильтр для вольтметра
 */
 
 //#define SI_OVERCLOCK 750000000L
 #define ENCODER_OPTIMIZE_INTERRUPTS
 
-#define crcmod 1// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
+#define crcmod 6// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -14,11 +19,11 @@ char ver[ ] = "150x06";
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define OLED_I2C_ADRESS 0x3C // Display I2c adress
 
-#define max_number_of_bands	99 // Максимальное оличество диапазонов.
+#define max_number_of_bands	30 // Максимальное количество диапазонов.
 #define Si_Xtall_Freq 27000000UL // Частота кварца si5351, Гц.
 #define si_cload SI5351_CRYSTAL_LOAD_10PF// 
-#define lo_max_freq 550000UL // Максимальная частота 500 КГц опоры, Гц.
-#define lo_min_freq 450000UL // Минимальная частота 500 КГц опоры, Гц.
+//#define lo_max_freq 550000UL // Максимальная частота 500 КГц опоры, Гц.
+//#define lo_min_freq 450000UL // Минимальная частота 500 КГц опоры, Гц.
 #define bfo_max_freq 30000000UL // Максимальная частота 21.7 МГц опоры, Гц.
 #define bfo_min_freq 1000000UL // Минимальная частота 21,7 МГц опоры, Гц.
 #define lo_freq 500000UL // Частота опоры 500 КГц.
@@ -38,6 +43,7 @@ char ver[ ] = "150x06";
 #define tonepin 12 // Порт выхода тонального сигнала для настройки TX.
 #define tonefreq 500 // Частота тонального сигнала для настройки TX.
 #define cwsemitonepin 11 // Пин выхода самоконтроля.
+#define pttdelay 50 //Задержка выключения PTT
 
 
 
@@ -52,11 +58,14 @@ char ver[ ] = "150x06";
 
 //Общие настройки
 struct general_set {
-  uint8_t stp_set = 3; //Начальный шаг настройки.
+  uint8_t stp = 3; //Начальный шаг настройки.
   uint8_t band_set = 0; // Стартовый диапазон.
   uint8_t number_of_bands_set = 0; // Количество диапазонов.
-  uint32_t usb_bfo_freq_set = 21200000UL; // Начальная частота опоры USB при первом включении.
-  uint32_t lsb_bfo_freq_set = 22200000UL; // Начальная частота опоры LSB при первом включении.
+  bool cmode = false; // Канальный режим.
+  uint32_t usb_bfo_RX_freq_set = 21200000UL; // Начальная частота опоры USB при первом включении.
+  uint32_t usb_bfo_TX_freq_set = 21200000UL; // Начальная частота опоры USB при первом включении.
+  uint32_t lsb_bfo_RX_freq_set = 22200000UL; // Начальная частота опоры LSB при первом включении.
+  uint32_t lsb_bfo_TX_freq_set = 22200000UL; // Начальная частота опоры LSB при первом включении.
   int16_t lo_cal_freq_set  = 0; // калибровка опоры 500кГц.
   int16_t Si_Xtall_calFreq_set = 5850; // Начальная частота калибровки кварца, Гц.
   uint8_t batt_cal_set = 208; // Начальная калибровка вольтметра.
@@ -67,16 +76,16 @@ struct general_set {
   uint8_t cwdelay = 50; // Задержка переключения на прием после CW передачи * 10мсек
   uint8_t cwtone = 70; // Сдвиг частоты CW *10 Гц
   uint8_t cwtype = 0; // 0: BUG Keyer, 1:Yambic Keyer
-  bool cwreverse = false; // Реверс ключа
-  //PTT Section
-  uint8_t pttdelay = 25; // Задержка PTT
 } general_setting;
 
-#define stp general_setting.stp_set
+#define stp general_setting.stp
 #define band general_setting.band_set
 #define number_of_bands general_setting.number_of_bands_set
-#define usb_bfo_freq general_setting.usb_bfo_freq_set
-#define lsb_bfo_freq general_setting.lsb_bfo_freq_set
+#define cmode general_setting.cmode
+#define usb_bfo_RX_freq general_setting.usb_bfo_RX_freq_set
+#define usb_bfo_TX_freq general_setting.usb_bfo_TX_freq_set
+#define lsb_bfo_RX_freq general_setting.lsb_bfo_RX_freq_set
+#define lsb_bfo_TX_freq general_setting.lsb_bfo_TX_freq_set
 #define lo_cal_freq general_setting.lo_cal_freq_set
 #define Si_Xtall_calFreq general_setting.Si_Xtall_calFreq_set
 #define batt_cal general_setting.batt_cal_set
@@ -86,15 +95,13 @@ struct general_set {
 #define cwdelay general_setting.cwdelay
 #define cwtone general_setting.cwtone
 #define cwtype general_setting.cwtype
-#define cwreverse general_setting.cwreverse
-#define pttdelay general_setting.pttdelay
 
 // Диапазонные настройки
 struct band_set {
   bool mode_set = 0; // LSB=0, USB=1.
   uint32_t vfo_freq_set = 7100000UL; // Начальная частота VFO при первом включении.
   uint8_t min_freq_set = 15; // *100KHz Минимальный предел частоты диапазона VFO.
-  uint8_t max_freq_set = 80; // *100KHz Максимальный предел частоты диапазона VFO.
+  uint8_t max_freq_set = 150; // *100KHz Максимальный предел частоты диапазона VFO.
 } band_setting;
 #define mode band_setting.mode_set
 #define vfo_freq band_setting.vfo_freq_set
@@ -115,8 +122,8 @@ uint16_t fwdpower = 0;
 uint16_t revpower = 0;
 uint8_t mybatt = 0;
 int8_t temperature = 0;
-int16_t screenstep = 1000;
-
+uint16_t screenstep = 1000;
+uint16_t rawbatt = 0;
 bool toneen = false;
 
 long oldPosition  = 0;
@@ -127,7 +134,6 @@ bool exitmenu = false;
 bool reqtemp = false;
 bool timesetup = false;
 bool actfmenuf = false;
-bool setupmode = false;
 
 // CW flags
 bool cwtxen = false;
@@ -184,6 +190,7 @@ void setup() {
   pinMode(fwdpin, INPUT);
   pinMode(revpin, INPUT);
   pinMode(tonepin, OUTPUT);
+  digitalWrite(tonepin, 0);
   digitalWrite(myEncBtn, HIGH);
   analogReference(INTERNAL);
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADRESS);
@@ -199,8 +206,8 @@ void setup() {
   powermeter();
   tempsensor ();
   timenow ();
+  if (!digitalRead(myEncBtn)) menu = 100;
   versionprint ();
-  if (!digitalRead(myEncBtn)) menu = 100;   //Если нажат кноб, то войти в инжменю
   mainscreen();
 
 }
@@ -209,15 +216,16 @@ void loop() { // Главный цикл
   pttsensor();
   cw();
   pushknob();
-  readencoder();
+  if (!cmode) readencoder(); //Если не в канальном режиме - считать енкодер
+  if (cmode && menu) readencoder(); //Если в канальном режиме и не на главном экране - считать енкодер
   txsensor();
-  tonegen();
+  battmeter();
   if (!menu) {
     if (txen) screenstep = 100;
     else screenstep = 1000;
     if (millis() - previousdsp > screenstep) {
       storetomem();
-      battmeter();
+      //battmeter();
       powermeter();
       tempsensor();
       timenow();
@@ -287,24 +295,39 @@ void pushknob () {  // Обработка нажатия на кноб
     knobup = true; // отмечаем флаг что кноб отпущен
     long knobupmillis = millis();
     if (knobupmillis - knobMillis >= 1000) { //Если длительное нажатие
-      if (menu == 0) menu = 4;
-      else if (menu != 0) menu = 0;
+      if (menu == 0) menu = 20; // Если долгое нажатие на главном экране, то перейти в юзерменю
+      else if (menu != 0) menu = 0; // Если долгое нажатие не на главном экране, то перейти на главный экран
     }
 
     if (knobupmillis - knobMillis < 1000 && knobupmillis - knobMillis > 100) { //Если кноб отпущен и был нажат и времени от таймера прошло 100Мс
-      if (menu < 4 && menu > 0 && actfmenuf) { //Если 0<меню<4 и крутили енкодер в быстром меню, то выйти на главный экран
+      if (menu < 4 && menu > 0 && actfmenuf) //Если 0<меню<4 и крутили енкодер в быстром меню, то выйти на главный экран
+      {
         actfmenuf = false;
         menu = 0;
       }
       else {
         menu ++; //Переходим на меню дальше
         if (menu == 4) menu = 0; //Если меню 5 выйти на главный экран
-        if (menu > 19 && menu < 100) menu = 4; //Если меню больше 19 но меньше 100 перейти на меню 5
-        if (menu > 120) menu = 100; //Если меню больше 120 перейти на меню 100
+        if (menu > 28 && menu < 100) menu = 20; //Если меню > 30 но < 100 перейти на меню 20
+        if (menu > 108) menu = 100; //Если меню больше 108 перейти на меню 100
       }
-      if (!number_of_bands && menu == 1) menu++;
+      if (!number_of_bands && (menu == 1 || menu == 100)) menu++; // Если каналы не настроены, то нет меню 1 и 100
+      if (cmode && number_of_bands) {                             //Если в канальном режиме, то пропускать меню 2,3,20,21,22,28,29
+        switch (menu) {
+          case 2:
+          case 3: menu = 0;
+            break;
+          case 20:
+          case 21:
+          case 22:
+          case 27:
+          case 28: menu = 23;
+            break;
+        }
+      }
+      if (menu == 104 || menu == 105) mode = false;
+      if (menu == 106 || menu == 107) mode = true;
     }
-
     mainscreen();
   }
 }
@@ -349,10 +372,11 @@ void readencoder() { // работа с енкодером
         vfosetup();
         break;
 
-      case 1: //Переключение диапазонов
+      case 1: //Переключение каналов
         if (newPosition > oldPosition && band < number_of_bands) band++;
         if (newPosition < oldPosition && band > 0) band--;
-        if (band > number_of_bands) band = number_of_bands;
+        //if (band > number_of_bands) band = number_of_bands;
+        band = constrain(band, 0, number_of_bands);
         band_memread();
         vfosetup();
         break;
@@ -369,114 +393,59 @@ void readencoder() { // работа с енкодером
         vfosetup();
         break;
 
-      case 4: //Настройка min_freq
+      case 20: //Настройка min_freq
         if (newPosition > oldPosition && min_freq <= max_hardware_freq) min_freq++;
         if (newPosition < oldPosition && min_freq >= min_hardware_freq) min_freq--;
         min_freq = constrain(min_freq, min_hardware_freq, max_freq - 1);
         break;
 
-      case 5: //Настройка maxfreq
+      case 21: //Настройка maxfreq
         if (newPosition > oldPosition && max_freq <= max_hardware_freq) max_freq++;
         if (newPosition < oldPosition && max_freq >= min_hardware_freq) max_freq--;
         max_freq = constrain(max_freq, min_freq + 1, max_hardware_freq);
         break;
 
-      case 108: //Частота кварца синтезатора
-        if (newPosition > oldPosition && Si_Xtall_calFreq <= 30000) Si_Xtall_calFreq += arraystp[stp];
-        if (newPosition < oldPosition && Si_Xtall_calFreq >= - 30000) Si_Xtall_calFreq -= arraystp[stp];
-        Si_Xtall_calFreq = constrain(Si_Xtall_calFreq, -30000, 30000);
-        si5351correction();
-        vfosetup();
-        break;
-
-      case 109: //2пч RX LSB
-        if (newPosition > oldPosition && lsb_bfo_RX_freq <= bfo_max_freq) lsb_bfo_RX_freq += arraystp[stp];
-        if (newPosition < oldPosition && lsb_bfo_RX_freq >= bfo_min_freq) lsb_bfo_RX_freq -= arraystp[stp];
-        lsb_bfo_RX_freq = constrain(lsb_bfo_RX_freq, bfo_min_freq, bfo_max_freq);
-        vfosetup();
-        break;
-
-      case 110: //2пч TX LSB
-        if (newPosition > oldPosition && lsb_bfo_TX_freq <= bfo_max_freq) lsb_bfo_TX_freq += arraystp[stp];
-        if (newPosition < oldPosition && lsb_bfo_TX_freq >= bfo_min_freq) lsb_bfo_TX_freq -= arraystp[stp];
-        lsb_bfo_TX_freq = constrain(lsb_bfo_TX_freq, bfo_min_freq, bfo_max_freq);
-        vfosetup();
-        break;
-
-      case 111: //2пч RX USB
-        if (newPosition > oldPosition && usb_bfo_RX_freq <= bfo_max_freq) usb_bfo_RX_freq += arraystp[stp];
-        if (newPosition < oldPosition && usb_bfo_RX_freq >= bfo_min_freq) usb_bfo_RX_freq -= arraystp[stp];
-        usb_bfo_RX_freq = constrain(usb_bfo_RX_freq, bfo_min_freq, bfo_max_freq);
-        vfosetup();
-        break;
-
-      case 112: //2пч TX USB
-        if (newPosition > oldPosition && usb_bfo_TX_freq <= bfo_max_freq) usb_bfo_TX_freq += arraystp[stp];
-        if (newPosition < oldPosition && usb_bfo_TX_freq >= bfo_min_freq) usb_bfo_TX_freq -= arraystp[stp];
-        usb_bfo_TX_freq = constrain(usb_bfo_TX_freq, bfo_min_freq, bfo_max_freq);
-        vfosetup();
-        break;
-
-      case 113: //1пч RX LSB
-        if (newPosition > oldPosition && lsb_lo_RX_freq <= lo_max_freq) lsb_lo_RX_freq += arraystp[stp];
-        if (newPosition < oldPosition && lsb_lo_RX_freq >= lo_min_freq) lsb_lo_RX_freq -= arraystp[stp];
-        lsb_lo_RX_freq = constrain(lsb_lo_RX_freq, lo_min_freq, lo_max_freq);
-        vfosetup();
-        break;
-
-      case 114: //1пч TX LSB
-        if (newPosition > oldPosition && lsb_lo_TX_freq <= lo_max_freq) lsb_lo_TX_freq += arraystp[stp];
-        if (newPosition < oldPosition && lsb_bfo_TX_freq >= lo_min_freq) lsb_lo_TX_freq -= arraystp[stp];
-        lsb_lo_TX_freq = constrain(lsb_lo_TX_freq, lo_min_freq, lo_max_freq);
-        vfosetup();
-        break;
-
-      case 115: //1пч RX USB
-        if (newPosition > oldPosition && usb_lo_RX_freq <= lo_max_freq) usb_lo_RX_freq += arraystp[stp];
-        if (newPosition < oldPosition && usb_lo_RX_freq >= lo_min_freq) usb_lo_RX_freq -= arraystp[stp];
-        usb_lo_RX_freq = constrain(usb_lo_RX_freq, lo_min_freq, lo_max_freq);
-        vfosetup();
-        break;
-
-      case 116: //1пч TX USB
-        if (newPosition > oldPosition && usb_lo_TX_freq <= lo_max_freq) usb_lo_TX_freq += arraystp[stp];
-        if (newPosition < oldPosition && usb_lo_TX_freq >= lo_min_freq) usb_lo_TX_freq -= arraystp[stp];
-        usb_lo_TX_freq = constrain(usb_lo_TX_freq, lo_min_freq, lo_max_freq);
-        vfosetup();
-        break;
-
-
-
-
-      case 10: //Настройка калибровки по питанию
-        if (newPosition > oldPosition && batt_cal <= 254) batt_cal++;
-        if (newPosition < oldPosition && batt_cal >= 100) batt_cal--;
-        if (batt_cal > 254) batt_cal = 254;
-        if (batt_cal < 100) batt_cal = 100;
-        break;
-
-      case 11: // Настройка количества диапазонов
+      case 22: // Настройка количества каналов
         if (newPosition > oldPosition && number_of_bands < max_number_of_bands) number_of_bands++;
         if (newPosition < oldPosition && number_of_bands > 0) number_of_bands--;
         if (number_of_bands > max_number_of_bands) number_of_bands = max_number_of_bands;
         if (band > number_of_bands) band = number_of_bands;
         break;
 
-      case 12: //Настройка Часов
+      case 23: //Настройка Часов
         if (newPosition > oldPosition && tm.Hour < 24) tm.Hour++;
         if (newPosition < oldPosition && tm.Hour > 0) tm.Hour--;
         if (tm.Hour > 23) tm.Hour = 23;
         timesetup = true;
         break;
 
-      case 13: //Настройка Минут
+      case 24: //Настройка Минут
         if (newPosition > oldPosition && tm.Minute < 60) tm.Minute++;
         if (newPosition < oldPosition && tm.Minute > 0) tm.Minute--;
-        if (tm.Minute > 59) tm.Minute = 0;
+        if (tm.Minute > 59) tm.Minute = 59;
         timesetup = true;
         break;
 
-      case 14: //Инверсия энкодера.
+      case 25: // Настройка CW-Delay
+        if (newPosition > oldPosition && cwdelay < 255) cwdelay++;
+        if (newPosition < oldPosition && cwdelay > 1) cwdelay--;
+        cwdelay = constrain(cwdelay, 10, 255);
+        break;
+
+      case 26: // Настройка CW-Tone
+        if (newPosition > oldPosition && cwtone < 255) cwtone++;
+        if (newPosition < oldPosition && cwtone > 1) cwtone--;
+        cwtone = constrain(cwtone, 10, 255);
+        break;
+
+
+      case 27: // Настройка делителя импульсов энкодера
+        if (newPosition > oldPosition && mem_enc_div < 255) mem_enc_div++;
+        if (newPosition < oldPosition && mem_enc_div > 1) mem_enc_div--;
+        mem_enc_div = constrain(mem_enc_div, 1, 255);
+        break;
+
+      case 28: //Инверсия энкодера.
         if (reverse_encoder) {
           reverse_encoder = false;
         }
@@ -486,34 +455,64 @@ void readencoder() { // работа с енкодером
         newPosition *= (-1);
         break;
 
-      case 15: // Настройка делителя импульсов энкодера
-        if (newPosition > oldPosition && mem_enc_div < 255) mem_enc_div++;
-        if (newPosition < oldPosition && mem_enc_div > 1) mem_enc_div--;
-        mem_enc_div = constrain(mem_enc_div, 1, 255);
+      case 100: //Канальный режим.
+        cmode = !cmode;
         break;
 
-      case 16: //Калибровка термодатчика
+      case 101: //Настройка калибровки по питанию
+        if (newPosition > oldPosition && batt_cal <= 254) batt_cal++;
+        if (newPosition < oldPosition && batt_cal >= 100) batt_cal--;
+        if (batt_cal > 254) batt_cal = 254;
+        if (batt_cal < 100) batt_cal = 100;
+        break;
+
+      case 102: //Калибровка термодатчика
         if (newPosition > oldPosition && temp_cal <= 30) temp_cal++;
         if (newPosition < oldPosition && temp_cal >= - 30) temp_cal--;
         temp_cal = constrain(temp_cal, -30, 30);
         break;
 
-      case 17: // Настройка CW-Delay
-        if (newPosition > oldPosition && cwdelay < 255) cwdelay++;
-        if (newPosition < oldPosition && cwdelay > 1) cwdelay--;
-        cwdelay = constrain(cwdelay, 10, 255);
+      case 103: //Частота кварца синтезатора
+        if (newPosition > oldPosition && Si_Xtall_calFreq <= 30000) Si_Xtall_calFreq += arraystp[stp];
+        if (newPosition < oldPosition && Si_Xtall_calFreq >= - 30000) Si_Xtall_calFreq -= arraystp[stp];
+        Si_Xtall_calFreq = constrain(Si_Xtall_calFreq, -30000, 30000);
+        si5351correction();
+        vfosetup();
         break;
 
-      case 18: // Настройка CW-Tone
-        if (newPosition > oldPosition && cwtone < 255) cwtone++;
-        if (newPosition < oldPosition && cwtone > 1) cwtone--;
-        cwtone = constrain(cwtone, 10, 255);
+      case 104: //2пч RX LSB
+        if (newPosition > oldPosition && lsb_bfo_RX_freq <= bfo_max_freq) lsb_bfo_RX_freq += arraystp[stp];
+        if (newPosition < oldPosition && lsb_bfo_RX_freq >= bfo_min_freq) lsb_bfo_RX_freq -= arraystp[stp];
+        lsb_bfo_RX_freq = constrain(lsb_bfo_RX_freq, bfo_min_freq, bfo_max_freq);
+        vfosetup();
         break;
 
-      case 19: // Настройка PTT-Delay
-        if (newPosition > oldPosition && pttdelay < 255) pttdelay += 5;
-        if (newPosition < oldPosition && pttdelay > 5) pttdelay -= 5;
-        pttdelay = constrain(pttdelay, 5, 255);
+      case 105: //2пч TX LSB
+        if (newPosition > oldPosition && lsb_bfo_TX_freq <= bfo_max_freq) lsb_bfo_TX_freq += arraystp[stp];
+        if (newPosition < oldPosition && lsb_bfo_TX_freq >= bfo_min_freq) lsb_bfo_TX_freq -= arraystp[stp];
+        lsb_bfo_TX_freq = constrain(lsb_bfo_TX_freq, bfo_min_freq, bfo_max_freq);
+        vfosetup();
+        break;
+
+      case 106: //2пч RX USB
+        if (newPosition > oldPosition && usb_bfo_RX_freq <= bfo_max_freq) usb_bfo_RX_freq += arraystp[stp];
+        if (newPosition < oldPosition && usb_bfo_RX_freq >= bfo_min_freq) usb_bfo_RX_freq -= arraystp[stp];
+        usb_bfo_RX_freq = constrain(usb_bfo_RX_freq, bfo_min_freq, bfo_max_freq);
+        vfosetup();
+        break;
+
+      case 107: //2пч TX USB
+        if (newPosition > oldPosition && usb_bfo_TX_freq <= bfo_max_freq) usb_bfo_TX_freq += arraystp[stp];
+        if (newPosition < oldPosition && usb_bfo_TX_freq >= bfo_min_freq) usb_bfo_TX_freq -= arraystp[stp];
+        usb_bfo_TX_freq = constrain(usb_bfo_TX_freq, bfo_min_freq, bfo_max_freq);
+        vfosetup();
+        break;
+
+      case 108: //1пч
+        if (newPosition > oldPosition) lo_cal_freq += arraystp[stp];
+        if (newPosition < oldPosition) lo_cal_freq -= arraystp[stp];
+        lo_cal_freq = constrain(lo_cal_freq, (-1000), 1000);
+        vfosetup();
         break;
 
 
@@ -534,7 +533,8 @@ void powermeter () { // Измеритель уровня выхода
 }
 
 void battmeter () { // Измеритель напряжения питания
-  int16_t rawbatt = analogRead(mybattpin);
+  //rawbatt = analogRead(mybattpin);
+  rawbatt = (14 * rawbatt + 2 * (analogRead(mybattpin))) >> 4; // Крутой фильтр для усреднения показаний вольтметра!!!
   mybatt = map(rawbatt, 0, 1023, 0, batt_cal);
 }
 
@@ -565,21 +565,11 @@ void mainscreen() { //Процедура рисования главного э�
       display.print(".");
       display.print(mybatt % 10);
       display.print("v");
-      display.setTextSize(1);
+      //display.setTextSize(1);
       //if (ptten) display.print("PTT");
       //if (cwtxen) display.print("CWtxen");
 
       if (txen) {//Если передача, то вывод показометра мощности
-        /*if (ptten) {
-          display.print("SSB ");
-          }
-          else if (cwtxen) {
-          display.print(" CW ");
-          }
-          else {
-          display.print("PWR ");
-          }*/
-
         if ((fwdpower - revpower) > 0) {
           if ((fwdpower + revpower) / (fwdpower - revpower) < 10)display.print(" ");
           display.print((fwdpower + revpower) / (fwdpower - revpower));
@@ -629,11 +619,11 @@ void mainscreen() { //Процедура рисования главного э�
       //if (cwkeydown) display.fillRect(0, 10, 3, 3, WHITE);
       break;
 
-    case 1: //Меню 1 - диапазон
+    case 1: //Меню 1 - канал
       display.println(band);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  BAND from 0 to ");
+      display.print("  Ch from 0 to ");
       display.print(number_of_bands);
       break;
 
@@ -656,8 +646,8 @@ void mainscreen() { //Процедура рисования главного э�
       display.print(menu);
       display.println("  LSB|USB Switch");
       break;
-
-    case 4: //Меню 4 - Настройка min_freq
+    //-----------------------------USER MENU Display-------------------------//
+    case 20: //Настройка min_freq
       display.println(min_freq * 100);
       display.setTextSize(1);
       display.print(menu);
@@ -666,7 +656,7 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("kHz");
       break;
 
-    case 5: //Меню 5 - Настройка maxfreq
+    case 21: //Настройка maxfreq
       display.println(max_freq * 100);
       display.setTextSize(1);
       display.print(menu);
@@ -675,59 +665,15 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("kHz");
       break;
 
-    case 6: //Меню 6 - Настройка BFO гетеродина LSB
-      display.setTextSize(2);
-      display.println(lsb_bfo_freq);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  BFO LSB ");
-      display.print((char)240);
-      display.print("Hz");
-      break;
-
-    case 7: //Меню 7 - Настройка BFO гетеродина USB
-      display.setTextSize(2);
-      display.println(usb_bfo_freq);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  BFO USB ");
-      display.print((char)240);
-      display.print("Hz");
-      break;
-
-    case 8: //Меню 8 - Настройка опорного гетеродина 500кГц
-      display.println(lo_cal_freq);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  lo 500kHz cal ");
-      display.print((char)240);
-      display.print("Hz");
-      break;
-
-    case 9: //Меню 9 - Настройка калибровки кварца
-      display.println(Si_Xtall_calFreq);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  Xtal Cal ");
-      display.print((char)240);
-      display.print("Hz");
-      break;
-
-    case 10: //Меню 10 - Настройка калибровки по питанию
-      display.println(batt_cal);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  Batt Cal");
-      break;
-
-    case 11: //Меню 11 - Количество диапазонов
+    case 22: //Количество каналов
       display.println(number_of_bands);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  MAX Num Bands");
+      display.print("  MAX Num Ch");
       break;
 
-    case 12: //Меню 12 - Настройка Часов
+
+    case 23: //Меню 12 - Настройка Часов
       if (tm.Hour < 10) display.print("0");
       display.println(tm.Hour);
       display.setTextSize(1);
@@ -735,15 +681,37 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("  Hour");
       break;
 
-    case 13: //Меню 13 - Настройка Минут
+    case 24: //Меню 13 - Настройка Минут
       if (tm.Minute < 10) display.print("0");
       display.println(tm.Minute);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  Minute");
+      display.print("  Min");
       break;
 
-    case 14: //Меню 14 - Reverse Encoder
+    case 25: //Меню 17 - CW-Delay
+      display.println(cwdelay * 10);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print("  CW Delay msec");
+      break;
+
+    case 26: //Меню 18 - CW-Tone
+      display.println(cwtone * 10);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print("  CW Tone Hz");
+      break;
+
+
+    case 27: //Меню 15 - Encoder Divider
+      display.println(mem_enc_div);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print(" !Enc Divider!");
+      break;
+
+    case 28: //Меню 14 - Reverse Encoder
       if (reverse_encoder) {
         display.println("Yes");
       }
@@ -753,17 +721,38 @@ void mainscreen() { //Процедура рисования главного э�
       }
       display.setTextSize(1);
       display.print(menu);
-      display.println("  Reverse Encoder");
+      display.println("  Reverse Enc");
       break;
 
-    case 15: //Меню 15 - Encoder Divider
-      display.println(mem_enc_div);
+    //-------------------------------------SETUP MENU DISPLAY--------------------------------------//
+
+    case 100: //Channel mode
+      if (cmode) {
+        display.println("Yes");
+      }
+      else
+      {
+        display.println("NO");
+      }
       display.setTextSize(1);
       display.print(menu);
-      display.print("  Encoder Divider");
+      display.println("  CHannel MODE");
       break;
 
-    case 16: //Калибровка термодатчика
+
+    case 101: //Меню 10 - Настройка калибровки по питанию
+      display.println(batt_cal);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print("  Batt ");
+      if (mybatt - 100 < 0) display.print("0");
+      display.print(mybatt / 10);
+      display.print(".");
+      display.print(mybatt % 10);
+      display.print("v");
+      break;
+
+    case 102: //Калибровка термодатчика
       display.println(temp_cal);
       display.setTextSize(1);
       display.print(menu);
@@ -773,27 +762,67 @@ void mainscreen() { //Процедура рисования главного э�
       display.print("C");
       break;
 
-    case 17: //Меню 17 - CW-Delay
-      display.println(cwdelay * 10);
+    case 103: //Настройка калибровки кварца
+      display.println(Si_Xtall_calFreq);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  CW Delay msec");
-      break;
-
-    case 18: //Меню 18 - CW-Tone
-      display.println(cwtone * 10);
-      display.setTextSize(1);
-      display.print(menu);
-      display.print("  CW Tone Hz");
+      display.print("  Xtal Cal ");
+      display.print((char)240);
+      display.print("Hz");
       break;
 
 
-    case 19: //Меню 19 - PTT-Delay
-      display.println(pttdelay * 10);
+    case 104: //Настройка BFO гетеродина USB RX
+      display.setTextSize(2);
+      display.println(lsb_bfo_RX_freq);
       display.setTextSize(1);
       display.print(menu);
-      display.print("  PTT Delay msec");
+      display.print(" BFO LSB RX");
+      display.print((char)240);
+      display.print("Hz");
       break;
+
+
+    case 105: //Настройка BFO гетеродина USB TX
+      display.setTextSize(2);
+      display.println(lsb_bfo_TX_freq);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print(" BFO LSB TX");
+      display.print((char)240);
+      display.print("Hz");
+      break;
+
+    case 106: //Настройка BFO гетеродина USB RX
+      display.setTextSize(2);
+      display.println(usb_bfo_RX_freq);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print(" BFO USB RX");
+      display.print((char)240);
+      display.print("Hz");
+      break;
+
+
+    case 107: //Настройка BFO гетеродина USB TX
+      display.setTextSize(2);
+      display.println(usb_bfo_TX_freq);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print(" BFO USB TX");
+      display.print((char)240);
+      display.print("Hz");
+      break;
+
+    case 108: //Настройка опорного гетеродина 500кГц
+      display.println(lo_cal_freq);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print("  500kHz cal");
+      display.print((char)240);
+      display.print("Hz");
+      break;
+
   }
   display.display();
   //debug();
@@ -805,28 +834,28 @@ void vfosetup() {
   if (cwtxen) {
     if (cwkeydown) {
       if (mode) {
-        si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), (usb_bfo_freq + lo_freq + lo_cal_freq - (cwtone * 10)), 0);
+        si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), (usb_bfo_TX_freq + lo_freq + lo_cal_freq - (cwtone * 10)), 0);
       }
       else {
-        si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), (lsb_bfo_freq - lo_freq + lo_cal_freq + (cwtone * 10)), 0);
+        si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), (lsb_bfo_TX_freq - lo_freq + lo_cal_freq + (cwtone * 10)), 0);
       }
     }
     else {
       if (mode) {
-        si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), 0, 0);
+        si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), 0, 0);
       }
       else {
-        si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), 0, 0);
+        si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), 0, 0);
       }
     }
 
   }
   else {
     if (mode) {
-      si.set_freq((vfo_freq + usb_bfo_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_freq));
+      si.set_freq((vfo_freq + usb_bfo_RX_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_RX_freq));
     }
     else {
-      si.set_freq((vfo_freq + lsb_bfo_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_freq));
+      si.set_freq((vfo_freq + lsb_bfo_RX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_RX_freq));
     }
   }
 
@@ -914,26 +943,21 @@ void versionprint() {
   display.setCursor(0, 0);
   display.setTextColor(WHITE);
   display.setTextSize(3);
-  display.println(ver);
-  display.setTextSize(1);
-  display.println("    From UD0CAJ");
-  display.display();
+  if (menu == 100) {
+    display.println("Setup");
+    display.display();
+    while (!digitalRead(myEncBtn));
+  }
+  else {
+    display.println(ver);
+    display.setTextSize(1);
+    display.println("    From UD0CAJ");
+    display.display();
+  }
   delay(1000);
 }
 
-void tonegen() {
-  if (txen && !toneen) {
-    if (menu != 0 && menu <= 3) {
-      tone(tonepin, tonefreq);
-      menu = 0;
-      toneen = true;
-    }
-  }
-  if (!txen && toneen) {
-    noTone(tonepin);
-    toneen = false;
-  }
-}
+
 
 void cwsemitonegen() {
   if (cwtxen && cwkeydown && !cwsemitoneen) {
@@ -1003,8 +1027,13 @@ void pttsensor() {
           pttdown = false;                    // Запоминаем, что PTT отпустили.
         }
 
-        if (!pttdown && (millis() - pttreleasetimer >= (pttdelay * 10))) {  //  Если отпустили давно, то:
+        if (!pttdown && (millis() - pttreleasetimer >= pttdelay)) {  //  Если отпустили давно, то:
           ptten = false;                                                    //  переводим на прием
+          if (toneen) {
+            noTone(tonepin);
+            delay(100);
+            toneen = false;
+          }
           rxtxcontrol(ptten);
         }
       }
@@ -1016,6 +1045,12 @@ void pttsensor() {
       if (!ptten) {
         ptten = true;         // 3 - переводим на PTT передачу
         rxtxcontrol(ptten);
+        if (menu > 0 && menu <= 3) {   // Если PTT в быстром меню - дать тон
+          menu = 0;
+          delay(100);
+          tone(tonepin, tonefreq);
+          toneen = true;
+        }
       }
     }
   }
