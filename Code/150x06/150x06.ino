@@ -295,7 +295,10 @@ void pushknob () {  // Обработка нажатия на кноб
     knobup = true; // отмечаем флаг что кноб отпущен
     long knobupmillis = millis();
     if (knobupmillis - knobMillis >= 1000) { //Если длительное нажатие
-      if (menu == 0) menu = 20; // Если долгое нажатие на главном экране, то перейти в юзерменю
+      if (menu == 0) {
+        if (cmode) menu = 23;
+        else menu = 20;// Если долгое нажатие на главном экране, то перейти в юзерменю
+      }
       else if (menu != 0) menu = 0; // Если долгое нажатие не на главном экране, то перейти на главный экран
     }
 
@@ -848,9 +851,16 @@ void vfosetup() {
         si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), 0, 0);
       }
     }
-
   }
-  else {
+  if (ptten) {
+    if (mode) {
+      si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_TX_freq));
+    }
+    else {
+      si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_TX_freq));
+    }
+  }
+  if (!ptten && !cwtxen) {
     if (mode) {
       si.set_freq((vfo_freq + usb_bfo_RX_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_RX_freq));
     }
@@ -858,7 +868,6 @@ void vfosetup() {
       si.set_freq((vfo_freq + lsb_bfo_RX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_RX_freq));
     }
   }
-
 }
 
 void si5351init() {
@@ -1034,7 +1043,9 @@ void pttsensor() {
             delay(100);
             toneen = false;
           }
+          vfosetup();
           rxtxcontrol(ptten);
+
         }
       }
     }
@@ -1044,7 +1055,9 @@ void pttsensor() {
       if (!pttdown) pttdown = true;       // 2 - запоминаем, что PTT нажат
       if (!ptten) {
         ptten = true;         // 3 - переводим на PTT передачу
+        vfosetup();
         rxtxcontrol(ptten);
+
         if (menu > 0 && menu <= 3) {   // Если PTT в быстром меню - дать тон
           menu = 0;
           delay(100);
