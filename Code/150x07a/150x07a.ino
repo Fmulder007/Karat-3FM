@@ -1,12 +1,11 @@
-char ver[ ] = "150x08";
+char ver[ ] = "150x07a";
 /*
-   Для плат версии 150х06 150x07. На других платах надо править конфиг пинов тональника и пр.
+   Для плат версии 150х03 150х04. На других платах надо править конфиг пинов тональника и пр.
    ВНИМАНИЕ!!! Применять ядро от AlexGyver: https://github.com/AlexGyver/GyverCore
    Добавлен Канальный режим. В нем недоступны "лишние" настройки
    Настройки второй ПЧ разбиты на 4 для применения разных фильтров RX/TX
    Включение с нажатым кнобом переводит в режим инжменю.
    Добавлен цифровой фильтр для вольтметра
-   Тональник на D10
 */
 
 //#define SI_OVERCLOCK 750000000L
@@ -189,7 +188,7 @@ void setup() {
   pinMode(myEncBtn, INPUT);
   pinMode(fwdpin, INPUT);
   pinMode(revpin, INPUT);
-  pinMode (10, OUTPUT);      // настроить пин как выход
+  pinMode (11, OUTPUT);      // настроить пин как выход
   digitalWrite(myEncBtn, HIGH);
   analogReference(INTERNAL);
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADRESS);
@@ -527,10 +526,11 @@ void readencoder() { // работа с енкодером
 }
 
 void powermeter () { // Измеритель уровня выхода
-  //fwdpower = constrain(analogRead(fwdpin), 1, 1023);
-  //revpower = constrain(analogRead(revpin), 1, 1023);
-  fwdpower = (12 * fwdpower + 4 * (analogRead(fwdpin)+1)) >> 4;
-  revpower = (12 * revpower + 4 * (analogRead(revpin)+1)) >> 4;
+  //fwdpin
+  //revpin
+  fwdpower = constrain(analogRead(fwdpin), 1, 1023);
+  revpower = constrain(analogRead(revpin), 1, 1023);
+  //mypower = map(fwdpower, 1, 1023, 0, 100);
 }
 
 void battmeter () { // Измеритель напряжения питания
@@ -969,13 +969,13 @@ void versionprint() {
 void cwsemitonegen() {
   if (cwtxen && cwkeydown && !cwsemitoneen) {
     if (!menu) {
-      Timer1.setFrequency(cwtone * 20);                 // Включаем тональник
-      Timer1.outputEnable(CHANNEL_B, TOGGLE_PIN);   // в момент срабатывания таймера пин будет переключаться
+      Timer2.setFrequency(cwtone * 20);                 // Включаем тональник
+      Timer2.outputEnable(CHANNEL_A, TOGGLE_PIN);   // в момент срабатывания таймера пин будет переключаться
       cwsemitoneen = true;
     }
   }
   if (!cwkeydown && cwsemitoneen) {
-    Timer1.outputDisable(CHANNEL_B); // Если включен тональник, выключаем его
+    Timer2.outputDisable(CHANNEL_A); // Если включен тональник, выключаем его
     cwsemitoneen = false;
   }
 }
@@ -1042,7 +1042,7 @@ void pttsensor() {
         if (!pttdown && (millis() - pttreleasetimer >= pttdelay)) {  //  Если отпустили давно, то:
           ptten = false;                                                    //  переводим на прием
           if (toneen) {
-            Timer1.outputDisable(CHANNEL_B); // Если включен тональник, выключаем его
+            Timer2.outputDisable(CHANNEL_A); // Если включен тональник, выключаем его
             delay(100);
             toneen = false;
           }
@@ -1064,8 +1064,8 @@ void pttsensor() {
         if (menu > 0 && menu <= 3) {   // Если PTT в быстром меню - дать тон
           menu = 0;
           delay(100);
-          Timer1.setFrequency(500 * 2);                 // Включаем тональник на 500 герц
-          Timer1.outputEnable(CHANNEL_B, TOGGLE_PIN);   // в момент срабатывания таймера пин будет переключаться
+          Timer2.setFrequency(500 * 2);                 // Включаем тональник на 500 герц
+          Timer2.outputEnable(CHANNEL_A, TOGGLE_PIN);   // в момент срабатывания таймера пин будет переключаться
           toneen = true;
         }
       }
