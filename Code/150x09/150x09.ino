@@ -34,8 +34,8 @@ char ver[ ] = "150x09";
 #define max_hardware_freq 199 // *100KHz Максимальный железный предел частоты диапазона VFO
 #define ONE_WIRE_BUS 14 // Порт датчика температуры
 #define myEncBtn 4 // Порт нажатия кноба.
-#define fwdpin 15 // Порт fwd показометра мощности. А0
-#define revpin 16 // Порт fwd показометра мощности. А0
+#define fwdpin 15 // Порт fwd показометра мощности. А1
+#define revpin 16 // Порт fwd показометра мощности. А2
 #define mybattpin 21 // Порт датчика АКБ
 #define txsenspin 17 //Порт датчика ТХ
 #define pttpin 6 // PTT
