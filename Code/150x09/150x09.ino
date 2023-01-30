@@ -547,7 +547,9 @@ void readencoder() { // работа с енкодером
 void powermeter () { // Измеритель уровня выхода
   //fwdpower = constrain(analogRead(fwdpin), 1, 1023);
   //revpower = constrain(analogRead(revpin), 1, 1023);
+  analogRead(fwdpin);
   fwdpower = (12 * fwdpower + 4 * (analogRead(fwdpin) + 1)) >> 4;
+  analogRead(revpin);
   revpower = (12 * revpower + 4 * (analogRead(revpin) + 1)) >> 4;
 }
 
