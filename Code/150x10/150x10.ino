@@ -1,4 +1,4 @@
-char ver[ ] = "150x09";
+char ver[ ] = "150x10";
 /*
    Для плат версии 150х06 150x07. На других платах надо править конфиг пинов тональника и пр.
    ВНИМАНИЕ!!! Применять ядро от AlexGyver: https://github.com/AlexGyver/GyverCore
@@ -14,7 +14,7 @@ char ver[ ] = "150x09";
 //#define SI_OVERCLOCK 750000000L
 #define ENCODER_OPTIMIZE_INTERRUPTS
 
-#define crcmod 1// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
+#define crcmod 3// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -45,6 +45,7 @@ char ver[ ] = "150x09";
 #define rxenpin 8 // RX en out pin
 #define tonefreq 500 // Частота тонального сигнала для настройки TX.
 #define pttdelay 50 //Задержка выключения PTT
+#define HiBandPin 11 //Пин управления ФНЧ передатчика
 
 #define pulsemode_on_delay 50 //Длительность импульса для реле с фиксацией
 
@@ -77,6 +78,7 @@ struct general_set {
   bool reverse_encoder_set = false; //Реверс энкодера.
   uint8_t mem_enc_div = 4; // Делитель импульсов энкодера
   int8_t temp_cal = 0; //Калибровка термометра
+  uint8_t HiBandBorder = 40; // Граница переключения ФНЧ передатчика
   //CW Section
   uint8_t cwdelay = 50; // Задержка переключения на прием после CW передачи * 10мсек
   uint8_t cwtone = 70; // Сдвиг частоты CW *10 Гц
@@ -102,6 +104,7 @@ struct general_set {
 #define cwtone general_setting.cwtone
 #define cwtype general_setting.cwtype
 #define pulsemode general_setting.pulsemode
+#define HiBandBorder general_setting.HiBandBorder
 
 // Диапазонные настройки
 struct band_set {
@@ -141,6 +144,7 @@ bool exitmenu = false;
 bool reqtemp = false;
 bool timesetup = false;
 bool actfmenuf = false;
+bool HiBand = false;
 
 // CW flags
 bool cwtxen = false;
@@ -204,6 +208,7 @@ void setup() {
   pinMode(fwdpin, INPUT);
   pinMode(revpin, INPUT);
   pinMode (10, OUTPUT);      // настроить пин как выход
+  pinMode (HiBandPin, OUTPUT);
   digitalWrite(myEncBtn, HIGH);
   analogReference(INTERNAL);
   display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADRESS);
@@ -326,7 +331,7 @@ void pushknob () {  // Обработка нажатия на кноб
         menu ++; //Переходим на меню дальше
         if (menu == 4) menu = 0; //Если меню 5 выйти на главный экран
         if (menu > 28 && menu < 100) menu = 20; //Если меню > 30 но < 100 перейти на меню 20
-        if (menu > 109) menu = 100; //Если меню больше 108 перейти на меню 100
+        if (menu > 110) menu = 100; //Если меню больше 110 перейти на меню 100
       }
       if (!number_of_bands && (menu == 1 || menu == 100)) menu++; // Если каналы не настроены, то нет меню 1 и 100
       if (cmode && number_of_bands) {                             //Если в канальном режиме, то пропускать меню 2,3,20,21,22,28,29
@@ -536,6 +541,12 @@ void readencoder() { // работа с енкодером
         pulsemode = !pulsemode;
         break;
 
+      case 110: //Граница переключения ФНЧ пенредатчика
+        if (newPosition > oldPosition && HiBandBorder <= max_hardware_freq) HiBandBorder++;
+        if (newPosition < oldPosition && HiBandBorder >= min_hardware_freq) HiBandBorder--;
+        HiBandBorder = constrain(HiBandBorder, min_hardware_freq, max_hardware_freq);
+        HiBandControl();
+        break;
     }
     actenc = millis();
     actencf = true;
@@ -857,6 +868,15 @@ void mainscreen() { //Процедура рисования главного э�
       display.println("  Pulse Mode");
       break;
 
+    case 110: //Настройка переключения ФНЧ передатчика
+      display.println(HiBandBorder * 100);
+      display.setTextSize(1);
+      display.print(menu);
+      display.print(" LPF Border Freq ");
+      display.print((char)240);
+      display.print("kHz");
+      break;
+
   }
   display.display();
   //debug();
@@ -899,6 +919,7 @@ void vfosetup() {
       si.set_freq((vfo_freq + lsb_bfo_RX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_RX_freq));
     }
   }
+  HiBandControl();
 }
 
 void si5351init() {
@@ -1149,5 +1170,16 @@ void rxtxcontrol() {
       digitalWrite (rxenpin, HIGH);
       pulsemode_on_timer = millis();
     }
+  }
+}
+
+void HiBandControl() {
+  if (!HiBand && vfo_freq > HiBandBorder * 100000UL) {
+    digitalWrite (HiBandPin, HIGH);
+    HiBand = true;
+  }
+  if (HiBand && vfo_freq < HiBandBorder * 100000UL) {
+    digitalWrite (HiBandPin, LOW);
+    HiBand = false;
   }
 }
