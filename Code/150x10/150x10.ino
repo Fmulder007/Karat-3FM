@@ -35,7 +35,7 @@ char ver[ ] = "150x10";
 #define ONE_WIRE_BUS 14 // Порт датчика температуры
 #define myEncBtn 4 // Порт нажатия кноба.
 #define fwdpin 15 // Порт fwd показометра мощности. А1
-#define revpin 16 // Порт fwd показометра мощности. А2
+#define revpin 16 // Порт rew показометра мощности. А2
 #define mybattpin 21 // Порт датчика АКБ
 #define txsenspin 17 //Порт датчика ТХ
 #define pttpin 6 // PTT
