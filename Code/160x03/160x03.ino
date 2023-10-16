@@ -14,7 +14,7 @@ char ver[ ] = "150x10";
 //#define SI_OVERCLOCK 750000000L
 #define ENCODER_OPTIMIZE_INTERRUPTS
 
-#define crcmod 3// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
+#define crcmod 5// поправка расчета CRC для НЕ СОВМЕСТИМОСТИ со старыми прошивками
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -27,11 +27,12 @@ char ver[ ] = "150x10";
 #define si_cload SI5351_CRYSTAL_LOAD_10PF// 
 //#define lo_max_freq 550000UL // Максимальная частота 500 КГц опоры, Гц.
 //#define lo_min_freq 450000UL // Минимальная частота 500 КГц опоры, Гц.
-#define bfo_max_freq 30000000UL // Максимальная частота 21.7 МГц опоры, Гц.
-#define bfo_min_freq 1000000UL // Минимальная частота 21,7 МГц опоры, Гц.
+#define bfo_max_freq 80000000UL // Максимальная частота 21.7 МГц опоры, Гц.
+#define bfo_min_freq 30000000UL // Минимальная частота 21,7 МГц опоры, Гц.
+//#define lo_freq 13650000UL // Частота опоры 500 КГц.
 #define lo_freq 500000UL // Частота опоры 500 КГц.
-#define min_hardware_freq 10 // *100KHz Минимальный железный предел частоты диапазона VFO
-#define max_hardware_freq 199 // *100KHz Максимальный железный предел частоты диапазона VFO
+#define min_hardware_freq 15 // *100KHz Минимальный железный предел частоты диапазона VFO
+#define max_hardware_freq 300 // *100KHz Максимальный железный предел частоты диапазона VFO
 #define ONE_WIRE_BUS 14 // Порт датчика температуры
 #define myEncBtn 4 // Порт нажатия кноба.
 #define fwdpin 15 // Порт fwd показометра мощности. А1
@@ -68,10 +69,10 @@ struct general_set {
   uint8_t band_set = 0; // Стартовый диапазон.
   uint8_t number_of_bands_set = 0; // Количество диапазонов.
   bool cmode = false; // Канальный режим.
-  uint32_t usb_bfo_RX_freq_set = 21200000UL; // Начальная частота опоры USB при первом включении.
-  uint32_t usb_bfo_TX_freq_set = 21200000UL; // Начальная частота опоры USB при первом включении.
-  uint32_t lsb_bfo_RX_freq_set = 22200000UL; // Начальная частота опоры LSB при первом включении.
-  uint32_t lsb_bfo_TX_freq_set = 22200000UL; // Начальная частота опоры LSB при первом включении.
+  uint32_t usb_bfo_RX_freq_set = 48000000UL; // Начальная частота опоры USB при первом включении.
+  uint32_t usb_bfo_TX_freq_set = 48000000UL; // Начальная частота опоры USB при первом включении.
+  uint32_t lsb_bfo_RX_freq_set = 48000000UL; // Начальная частота опоры LSB при первом включении.
+  uint32_t lsb_bfo_TX_freq_set = 48000000UL; // Начальная частота опоры LSB при первом включении.
   int16_t lo_cal_freq_set  = 0; // калибровка опоры 500кГц.
   int16_t Si_Xtall_calFreq_set = 5850; // Начальная частота калибровки кварца, Гц.
   uint8_t batt_cal_set = 208; // Начальная калибровка вольтметра.
@@ -111,7 +112,7 @@ struct band_set {
   bool mode_set = 0; // LSB=0, USB=1.
   uint32_t vfo_freq_set = 7100000UL; // Начальная частота VFO при первом включении.
   uint8_t min_freq_set = 15; // *100KHz Минимальный предел частоты диапазона VFO.
-  uint8_t max_freq_set = 150; // *100KHz Максимальный предел частоты диапазона VFO.
+  uint32_t max_freq_set = 300; // *100KHz Максимальный предел частоты диапазона VFO.
 } band_setting;
 #define mode band_setting.mode_set
 #define vfo_freq band_setting.vfo_freq_set
