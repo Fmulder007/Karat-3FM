@@ -1,6 +1,6 @@
-char ver[ ] = "150x10";
+char ver[ ] = "160х03";
 /*
-   Для плат версии 150х06 150x07. На других платах надо править конфиг пинов тональника и пр.
+   Для Карат-3,5
    ВНИМАНИЕ!!! Применять ядро от AlexGyver: https://github.com/AlexGyver/GyverCore
    Добавлен Канальный режим. В нем недоступны "лишние" настройки
    Настройки второй ПЧ разбиты на 4 для применения разных фильтров RX/TX
@@ -889,35 +889,35 @@ void vfosetup() {
   if (cwtxen) {
     if (cwkeydown) {
       if (mode) {
-        si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), (usb_bfo_TX_freq + lo_freq + lo_cal_freq - (cwtone * 10)), 0);
+        si.set_freq((vfo_freq), (usb_bfo_TX_freq + lo_freq + lo_cal_freq - (cwtone * 10)), 0);
       }
       else {
-        si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), (lsb_bfo_TX_freq - lo_freq + lo_cal_freq + (cwtone * 10)), 0);
+        si.set_freq((vfo_freq), (lsb_bfo_TX_freq - lo_freq + lo_cal_freq + (cwtone * 10)), 0);
       }
     }
     else {
       if (mode) {
-        si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), 0, 0);
+        si.set_freq((vfo_freq), 0, 0);
       }
       else {
-        si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), 0, 0);
+        si.set_freq((vfo_freq), 0, 0);
       }
     }
   }
   if (ptten) {
     if (mode) {
-      si.set_freq((vfo_freq + usb_bfo_TX_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_TX_freq));
+      si.set_freq((vfo_freq), 0, (usb_bfo_TX_freq));
     }
     else {
-      si.set_freq((vfo_freq + lsb_bfo_TX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_TX_freq));
+      si.set_freq((vfo_freq), 0, (lsb_bfo_TX_freq));
     }
   }
   if (!ptten && !cwtxen) {
     if (mode) {
-      si.set_freq((vfo_freq + usb_bfo_RX_freq + lo_freq + lo_cal_freq), 0, (usb_bfo_RX_freq));
+      si.set_freq((vfo_freq), 0, (usb_bfo_RX_freq));
     }
     else {
-      si.set_freq((vfo_freq + lsb_bfo_RX_freq - lo_freq + lo_cal_freq), 0, (lsb_bfo_RX_freq));
+      si.set_freq((vfo_freq), 0, (lsb_bfo_RX_freq));
     }
   }
   HiBandControl();
