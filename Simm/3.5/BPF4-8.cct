@@ -3,7 +3,7 @@
 ***********************************************************
 mmdB{
 max= 2.00000000000000E+0001
-min=-4.00000000000000E+0001
+min=-1.50000000000000E+0002
 }
 mmLin{
 max= 1.00000000000000E+0000
@@ -20,7 +20,7 @@ crot=0
 position.x=0
 position.y=0
 selected=FALSE
-value[1]={nom= 7.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 6.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -214,12 +214,12 @@ value=1
 Xax{
 max= 5.00000000000000E+0007
 min= 1.00000000000000E+0006
-numpoints=199
+numpoints=100
 centspan=FALSE
 freqmode=2
 }
 Y1ax{
-min=-5.00000000000000E+0001
+min=-1.50000000000000E+0002
 max= 2.00000000000000E+0001
 measwhat=2
 tracetype=0
@@ -246,7 +246,7 @@ polarmeaswhat{
 value=1
 }
 cursorpos{
-value=101
+value=37
 }
 circleson{
 value=FALSE
@@ -256,7 +256,7 @@ value=TRUE
 }
 drawdat{
 P1{
-pos.x=100
+pos.x=70
 pos.y=120
 node.x=1
 node.y=-1
@@ -265,7 +265,7 @@ Zo= 5.00000000000000E+0001
 selected=FALSE
 }
 P2{
-pos.x=580
+pos.x=630
 pos.y=120
 node.x=7
 node.y=-1
@@ -343,7 +343,7 @@ crot=2
 position.x=200
 position.y=120
 selected=FALSE
-value[1]={nom= 6.80000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 6.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -364,7 +364,7 @@ crot=2
 position.x=540
 position.y=120
 selected=FALSE
-value[1]={nom= 6.80000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 6.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -385,7 +385,7 @@ crot=2
 position.x=360
 position.y=120
 selected=FALSE
-value[1]={nom= 5.60000000000000E-0009; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 5.00000000000000E-0009; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -406,7 +406,7 @@ crot=1
 position.x=240
 position.y=180
 selected=FALSE
-value[1]={nom= 7.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 5.10000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -427,7 +427,7 @@ crot=1
 position.x=410
 position.y=180
 selected=FALSE
-value[1]={nom= 7.20000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
+value[1]={nom= 5.10000000000000E-0010; mintol=-2.00000000000000E+0000; maxtol= 2.00000000000000E+0000; TolEn=TRUE; Tol%=TRUE; }
 value[2]={nom= 2.00000000000000E+0002; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[3]={nom= 1.00000000000000E+0008; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[4]={nom= 1.00000000000000E+0009; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -446,7 +446,7 @@ name=
 ctype=4
 crot=1
 position.x=240
-position.y=220
+position.y=210
 selected=FALSE
 value[1]={nom= 0.00000000000000E+0000; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[2]={nom= 0.00000000000000E+0000; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -467,7 +467,7 @@ name=
 ctype=4
 crot=1
 position.x=410
-position.y=220
+position.y=210
 selected=FALSE
 value[1]={nom= 0.00000000000000E+0000; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
 value[2]={nom= 0.00000000000000E+0000; mintol= 0.00000000000000E+0000; maxtol= 0.00000000000000E+0000; TolEn=FALSE; Tol%=FALSE; }
@@ -494,7 +494,7 @@ finish.y=120
 short{
 startselected=FALSE
 finishselected=FALSE
-start.x=240
+start.x=260
 start.y=120
 finish.x=280
 finish.y=120
@@ -545,7 +545,7 @@ finishselected=FALSE
 start.x=240
 start.y=160
 finish.x=240
-finish.y=120
+finish.y=140
 }
 short{
 startselected=FALSE
@@ -558,17 +558,49 @@ finish.y=120
 short{
 startselected=FALSE
 finishselected=FALSE
+start.x=260
+start.y=120
+finish.x=240
+finish.y=120
+}
+short{
+startselected=FALSE
+finishselected=FALSE
+start.x=410
+start.y=200
+finish.x=410
+finish.y=200
+}
+short{
+startselected=FALSE
+finishselected=FALSE
 start.x=240
-start.y=210
+start.y=200
 finish.x=240
 finish.y=200
 }
 short{
 startselected=FALSE
 finishselected=FALSE
-start.x=410
-start.y=210
-finish.x=410
-finish.y=200
+start.x=240
+start.y=120
+finish.x=240
+finish.y=140
+}
+short{
+startselected=FALSE
+finishselected=FALSE
+start.x=90
+start.y=120
+finish.x=120
+finish.y=120
+}
+short{
+startselected=FALSE
+finishselected=FALSE
+start.x=560
+start.y=120
+finish.x=610
+finish.y=120
 }
 }
