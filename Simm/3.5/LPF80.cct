@@ -212,7 +212,7 @@ current1port{
 value=1
 }
 Xax{
-max= 4.00000000000000E+0007
+max= 1.00000000000000E+0007
 min= 4.00000000000000E+0005
 numpoints=100
 centspan=FALSE
@@ -246,7 +246,7 @@ polarmeaswhat{
 value=1
 }
 cursorpos{
-value=51
+value=53
 }
 circleson{
 value=FALSE
